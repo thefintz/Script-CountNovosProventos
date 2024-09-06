@@ -36,30 +36,30 @@ def count_and_save_diffs():
 
     # Para cada provento em proventos.csv
     for index, row in df_depois.iterrows():
-        print(f"Comparando linha {index}: {row}")
-        # Verificar se existe uma linha igual em final.csv (exceto data_pagamento e valor)
+        # print(f"Comparando linha {index}: {row}")
+        # Verificar se existe uma linha igual em final.csv (exceto data_pagamento e valor e isin)
         matching_rows = df_antes_copy[cols_to_compare].eq(row[cols_to_compare]).all(axis=1)
 
         # Exibir as linhas correspondentes encontradas
-        print(f"Linhas correspondentes no DataFrame anterior para a linha {index}: {matching_rows.sum()}")
+        # print(f"Linhas correspondentes no DataFrame anterior para a linha {index}: {matching_rows.sum()}")
         if matching_rows.any():
             matched_df = df_antes_copy[matching_rows]
-            print(f"Linhas correspondentes:\n{matched_df}")
+            # print(f"Linhas correspondentes:\n{matched_df}")
 
             # Verificar se o valor está dentro da margem de erro de 10%
             close_enough = abs(matched_df['valor'] - row['valor']) <= 0.1 * row['valor']
 
             # Exibir o resultado da margem de erro para depuração
-            print(f"Valor: {row['valor']}, Correspondência com margem de erro: {close_enough.any()}")
+            # print(f"Valor: {row['valor']}, Correspondência com margem de erro: {close_enough.any()}")
             if not close_enough.any():
-                print(f"Adicionando linha {index} à lista de diferenças")
+                # print(f"Adicionando linha {index} à lista de diferenças")
                 diffs_list.append(row)
             else:
                 # Remover todas as correspondências do DataFrame original
-                print(f"Removendo correspondência para a linha {index}")
+                # print(f"Removendo correspondência para a linha {index}")
                 df_antes_copy = df_antes_copy.drop(matched_df.index[close_enough])
         else:
-            print(f"Sem correspondência, adicionando linha {index} à lista de diferenças")
+            # print(f"Sem correspondência, adicionando linha {index} à lista de diferenças")
             diffs_list.append(row)
 
     # Converter a lista de diferenças em um DataFrame
@@ -67,6 +67,7 @@ def count_and_save_diffs():
 
     # Salvar as diferenças em um arquivo CSV
     df_diffs.to_csv(output_file, index=False)
+    # print(df_diffs.dtypes)
 
     # Retornar o número de diferenças encontradas
     print(f"Número de diferenças encontradas e salvas: {len(diffs_list)}")
