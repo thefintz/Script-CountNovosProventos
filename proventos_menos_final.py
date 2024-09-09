@@ -1,8 +1,8 @@
 import pandas as pd
 
-antes_file = 'alup_antes.csv' # final.csv     alup_antes.csv
-depois_file = 'alup_depois.csv' # proventos.csv    alup_depois.csv
-output_file = 'diferencas_linhas_alup.csv' #diferencas_linhas.csv   diferencas_linhas_alup.csv
+antes_file = 'final.csv' # final.csv     alup_antes.csv
+depois_file = 'proventos.csv' # proventos.csv    alup_depois.csv
+output_file = 'diferencas_linhas_mauricio.csv' #diferencas_linhas.csv   diferencas_linhas_alup.csv
 
 
 def count_and_save_diffs():
@@ -14,19 +14,19 @@ def count_and_save_diffs():
     # print(df_antes.dtypes)
     # print(df_depois.dtypes)
     # print('----')
-
+ 
     # Converter as colunas de data para string ou datetime para garantir consistência
-    df_antes['data_aprovacao'] = pd.to_datetime(df_antes['data_aprovacao'], errors='coerce')
-    df_antes['data_com'] = pd.to_datetime(df_antes['data_com'], errors='coerce')
-    df_antes['data_ult_preco_com'] = pd.to_datetime(df_antes['data_ult_preco_com'], errors='coerce')
-    df_antes['data_pagamento'] = pd.to_datetime(df_antes['data_pagamento'], errors='coerce')
-    df_depois['data_aprovacao'] = pd.to_datetime(df_depois['data_aprovacao'], errors='coerce')
-    df_depois['data_com'] = pd.to_datetime(df_depois['data_com'], errors='coerce')
-    df_depois['data_ult_preco_com'] = pd.to_datetime(df_depois['data_ult_preco_com'], errors='coerce')
-    df_depois['data_pagamento'] = pd.to_datetime(df_depois['data_pagamento'], errors='coerce')
+    df_antes['data_aprovacao'] = pd.to_datetime(df_antes['data_aprovacao'])
+    df_antes['data_com'] = pd.to_datetime(df_antes['data_com']).dt.date
+    df_antes['data_ult_preco_com'] = pd.to_datetime(df_antes['data_ult_preco_com'])
+    df_antes['data_pagamento'] = pd.to_datetime(df_antes['data_pagamento'])
+    df_depois['data_aprovacao'] = pd.to_datetime(df_depois['data_aprovacao'])
+    df_depois['data_com'] = pd.to_datetime(df_depois['data_com']).dt.date
+    df_depois['data_ult_preco_com'] = pd.to_datetime(df_depois['data_ult_preco_com'])
+    df_depois['data_pagamento'] = pd.to_datetime(df_depois['data_pagamento'])
 
     # Ignorar a coluna 'data_pagamento' ao comparar e aplicar margem de erro para 'valor'
-    cols_to_compare = df_depois.columns.difference(['data_pagamento', 'valor', 'isin'])
+    cols_to_compare = df_depois.columns.difference(['data_pagamento', 'valor', 'isin', 'data_aprovacao', 'data_ult_preco_com', 'ult_preco_com', 'tipo_ativo', 'ticker_base'])
 
     # Lista para armazenar as diferenças
     diffs_list = []
@@ -38,7 +38,13 @@ def count_and_save_diffs():
     for index, row in df_depois.iterrows():
         # print(f"Comparando linha {index}: {row}")
         # Verificar se existe uma linha igual em final.csv (exceto data_pagamento e valor e isin)
+        if row['ticker'] == 'AZEV3':
+            print(row)
+            print(df_antes_copy[df_antes_copy['ticker'] == 'AZEV3'])
+            
         matching_rows = df_antes_copy[cols_to_compare].eq(row[cols_to_compare]).all(axis=1)
+        if row['ticker'] == 'AZEV3':
+            print(df_antes_copy[matching_rows])
 
         # Exibir as linhas correspondentes encontradas
         # print(f"Linhas correspondentes no DataFrame anterior para a linha {index}: {matching_rows.sum()}")
@@ -47,9 +53,8 @@ def count_and_save_diffs():
             # print(f"Linhas correspondentes:\n{matched_df}")
 
             # Verificar se o valor está dentro da margem de erro de 10%
-            close_enough = abs(matched_df['valor'] - row['valor']) <= 0.1 * row['valor']
+            close_enough = abs(matched_df['valor'] - row['valor']) <= 0.01 * row['valor']
 
-            # Exibir o resultado da margem de erro para depuração
             # print(f"Valor: {row['valor']}, Correspondência com margem de erro: {close_enough.any()}")
             if not close_enough.any():
                 # print(f"Adicionando linha {index} à lista de diferenças")
@@ -57,7 +62,10 @@ def count_and_save_diffs():
             else:
                 # Remover todas as correspondências do DataFrame original
                 # print(f"Removendo correspondência para a linha {index}")
-                df_antes_copy = df_antes_copy.drop(matched_df.index[close_enough])
+                if row['ticker'] == 'AZEV3':
+                    print('linha proxima:')
+                    print(close_enough)
+                df_antes_copy = df_antes_copy.drop(matched_df.index[close_enough][0])
         else:
             # print(f"Sem correspondência, adicionando linha {index} à lista de diferenças")
             diffs_list.append(row)
