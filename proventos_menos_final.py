@@ -25,6 +25,10 @@ def count_and_save_diffs():
     df_depois['data_ult_preco_com'] = pd.to_datetime(df_depois['data_ult_preco_com'])
     df_depois['data_pagamento'] = pd.to_datetime(df_depois['data_pagamento'])
 
+    # df_antes['valor'] = df_antes['valor'].apply(float)
+    # df_depois['valor'] = df_depois['valor'].apply(float)
+    # # output_file['valor'] = output_file['valor'].apply(float)
+
     # Ignorar a coluna 'data_pagamento' ao comparar e aplicar margem de erro para 'valor'
     cols_to_compare = df_depois.columns.difference(['data_pagamento', 'valor', 'isin', 'data_aprovacao', 'data_ult_preco_com', 'ult_preco_com', 'tipo_ativo', 'ticker_base'])
 
@@ -75,7 +79,10 @@ def count_and_save_diffs():
 
     # Salvar as diferenças em um arquivo CSV
     df_diffs.to_csv(output_file, index=False)
+    # df_diffs.to_csv(output_file, index=False, float_format='%.10f') tirando not cientifica do csv 
     # print(df_diffs.dtypes)
+    print(df_antes.dtypes)
+    print(df_depois.dtypes)
 
     # Retornar o número de diferenças encontradas
     print(f"Número de diferenças encontradas e salvas: {len(diffs_list)}")
