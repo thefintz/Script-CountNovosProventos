@@ -1,8 +1,8 @@
 import pandas as pd
 
-antes_file = 'final.csv' # final.csv     alup_antes.csv
-depois_file = 'proventos.csv' # proventos.csv    alup_depois.csv
-output_file = 'diferencas_linhas_mauricio.csv' #diferencas_linhas.csv   diferencas_linhas_alup.csv
+antes_file = 'final.csv' 
+depois_file = 'proventos.csv' 
+output_file = 'diffs_depois-antes.csv' 
 
 
 def count_and_save_diffs():
@@ -42,13 +42,11 @@ def count_and_save_diffs():
     for index, row in df_depois.iterrows():
         # print(f"Comparando linha {index}: {row}")
         # Verificar se existe uma linha igual em final.csv (exceto data_pagamento e valor e isin)
-        if row['ticker'] == 'AZEV3':
-            print(row)
-            print(df_antes_copy[df_antes_copy['ticker'] == 'AZEV3'])
             
         matching_rows = df_antes_copy[cols_to_compare].eq(row[cols_to_compare]).all(axis=1)
-        if row['ticker'] == 'AZEV3':
+        if row['ticker'] == 'AMCE3':
             print(df_antes_copy[matching_rows])
+            
 
         # Exibir as linhas correspondentes encontradas
         # print(f"Linhas correspondentes no DataFrame anterior para a linha {index}: {matching_rows.sum()}")
@@ -56,9 +54,11 @@ def count_and_save_diffs():
             matched_df = df_antes_copy[matching_rows]
             # print(f"Linhas correspondentes:\n{matched_df}")
 
-            # Verificar se o valor está dentro da margem de erro de 10%
-            close_enough = abs(matched_df['valor'] - row['valor']) <= 0.01 * row['valor']
-
+            # Verificar se o valor está dentro da margem de erro de 1%
+            # close_enough = round(matched_df['valor'], 6) == round(row['valor'], 6)
+            close_enough = abs(matched_df['valor'] - row['valor']) <= 0.0001
+            if row['ticker'] == 'AMCE3':
+                print(matched_df['valor'])
             # print(f"Valor: {row['valor']}, Correspondência com margem de erro: {close_enough.any()}")
             if not close_enough.any():
                 # print(f"Adicionando linha {index} à lista de diferenças")
@@ -66,9 +66,9 @@ def count_and_save_diffs():
             else:
                 # Remover todas as correspondências do DataFrame original
                 # print(f"Removendo correspondência para a linha {index}")
-                if row['ticker'] == 'AZEV3':
-                    print('linha proxima:')
-                    print(close_enough)
+                if row['ticker'] == 'AMCE3':
+                    print(matched_df['valor'])
+
                 df_antes_copy = df_antes_copy.drop(matched_df.index[close_enough][0])
         else:
             # print(f"Sem correspondência, adicionando linha {index} à lista de diferenças")
@@ -79,7 +79,7 @@ def count_and_save_diffs():
 
     # Salvar as diferenças em um arquivo CSV
     df_diffs.to_csv(output_file, index=False)
-    # df_diffs.to_csv(output_file, index=False, float_format='%.10f') tirando not cientifica do csv 
+    # df_diffs.to_csv(output_file, index=False, float_format='%.10f')
     # print(df_diffs.dtypes)
     print(df_antes.dtypes)
     print(df_depois.dtypes)
